@@ -89,7 +89,6 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
             user2: REQUEST.user2,
             current: REQUEST.user1,
             board: [["","",""],["","",""],["","",""]],
-            progress: "playing",
             winby: "",
             time: REQUEST.time,
         }
