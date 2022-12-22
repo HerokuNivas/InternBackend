@@ -103,6 +103,24 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
     return "Done";
 }
 
+async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("games");
+        const res = await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
+    }
+    catch(err) {
+        return "Done";
+    }
+    finally {
+        await client.close();
+    }
+    return "Done";
+}
+
+
 async function dataFind(USERNAME, PASSWORD, REQUEST){
     const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
@@ -202,6 +220,24 @@ async function dataRejectGame(USERNAME, PASSWORD, USER1, USER2){
     }
 }
 
+async function dataFindParGame(USERNAME, PASSWORD, USER1, USER2){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("games");
+        const result = await collectionIs.findOne({USER1, USER2});
+        return result;
+    }
+    catch(err){
+        return err;
+    }
+    finally{
+        await client.close();
+    }
+    return {};  
+}
+
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -251,8 +287,20 @@ app.get('/reject', (req, res) => {
     dataRejectGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function(result){res.send({success: result})});
 });
 
+app.post('/update', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataUpdateGame(USERNAME, PASSWORD, req.body).then(function(result){res.send({result: result})});
+});
+
 app.listen(PORT, function (err) {
     if (err) console.log("Error is" + err);
 }); 
+
+app.get('/pargame', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataFindParGame(USERNAME, PASSWORD, req.user1, req.user2).then(function(result){res.send({games: result})});
+})
 
 module.exports = app;
