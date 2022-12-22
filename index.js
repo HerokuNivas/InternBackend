@@ -91,6 +91,7 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
             board: [["","",""],["","",""],["","",""]],
             winby: "",
             time: REQUEST.time,
+            last: "o",
         }
         await collectionIs.insertOne(doc);
     }
