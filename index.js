@@ -78,6 +78,32 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST){
     return {success: true, message: ""}
 }
 
+async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("games");
+        const doc = {
+            user1: REQUEST.user1,
+            user2: REQUEST.user2,
+            current: REQUEST.user1,
+            board: [["","",""],["","",""],["","",""]],
+            progress: "playing",
+            winby: "",
+            time: REQUEST.time,
+        }
+        await collectionIs.insertOne(doc);
+    }
+    catch(err) {
+        return "Done";
+    }
+    finally {
+        await client.close();
+    }
+    return "Done";
+}
+
 async function dataFind(USERNAME, PASSWORD, REQUEST){
     const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
@@ -95,6 +121,23 @@ async function dataFind(USERNAME, PASSWORD, REQUEST){
         await client.close();
     }
     return false;
+}
+
+async function dataMyRequests(USERNAME, PASSWORD, USER){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("requests");
+        var result = await collectionIs.find({$and:[{to:USER}, {message: "Request in progress"}]}).toArray();
+        return result;
+    }
+    catch(err){
+        return {};
+    }
+    finally{
+        client.close();
+    }
 }
 
 async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
@@ -132,6 +175,35 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
     }
 }
 
+async function dataAcceptGame(USERNAME, PASSWORD, USER1, USER2){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("requests");
+        const data = await collectionIs.updateOne({$and:[{user1: USER1}, {user2: USER2}]}, {$set:{message: "Game in progress"}});
+        return true;
+    }
+    catch(err){
+        return false;
+    }
+}
+
+async function dataRejectGame(USERNAME, PASSWORD, USER1, USER2){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("requests");
+        const data = await collectionIs.deleteOne({user1: USER1, user2: USER2});
+        return true;
+    }
+    catch(err){
+        return false;
+    }
+}
+
+
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
@@ -144,6 +216,12 @@ app.post('/login', (req, res) => {
     dataFind(USERNAME, PASSWORD, req.body).then(function(result){res.send({success: result})});
 });
 
+app.post('/creategame', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataCreateGame(USERNAME, PASSWORD, req.body).then(function(result){res.send({success: result})});
+});
+
 app.get('/games', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
@@ -154,6 +232,24 @@ app.get('/requests', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
     dataRequestGame(USERNAME, PASSWORD, req.query.user, req.query.email).then(function(result){res.send({success: result.success, message: result.message})})
+});
+
+app.get('/myrequests', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataMyRequests(USERNAME, PASSWORD, req.query.user).then(function(result){res.send(({result: result}))});
+});
+
+app.get('/accept', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataAcceptGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function(result){res.send({success: result})});
+});
+
+app.get('/reject', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataRejectGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function(result){res.send({success: result})});
 });
 
 app.listen(PORT, function (err) {
