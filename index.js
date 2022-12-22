@@ -38,8 +38,8 @@ async function dataFindGame(USERNAME, PASSWORD, REQUEST){
     const client = new MongoClient(uri);
     try{
         const databaseIs = client.db("AsyncTicTacToe");
-        const collectionIs = databaseIs.collection("user");
-        var result = await collectionIs.find({$or:[{user1: REQUEST}, {user2: REQUEST}]});
+        const collectionIs = databaseIs.collection("games");
+        var result = await collectionIs.find({$or:[{user1:REQUEST}, {user2: REQUEST}]}).toArray();
         return result;
     }
     catch(err){
@@ -48,7 +48,7 @@ async function dataFindGame(USERNAME, PASSWORD, REQUEST){
     finally{
         await client.close();
     }
-    return {};
+    return {};  
 }
 
 async function datainsertuser(USERNAME, PASSWORD, REQUEST){
@@ -97,6 +97,41 @@ async function dataFind(USERNAME, PASSWORD, REQUEST){
     return false;
 }
 
+async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
+    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try{
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("user");
+        const sendTo = await collectionIs.findOne({Email: EMAIL});
+        if(sendTo == null)
+            return {success: false, message: "No user found"}
+        else{
+            const collectionIsOne = databaseIs.collection("requests");
+            const findAgain = await collectionIsOne.findOne({user1: USER, user2: sendTo.UserName})
+            if(findAgain !== null){
+                return {success: false, message: findAgain.message}
+            }
+            else{
+                const doc = {
+                    user1: USER,
+                    user2: sendTo.UserName,
+                    to: sendTo.UserName,
+                    message: "Request in progress"
+                }
+                await collectionIsOne.insertOne(doc);
+                return {success: true, message: "successfully sent"}
+            }
+        }
+    }
+    catch(err){
+        return {success: false, message: "An error occured"}
+    }
+    finally{
+        client.close();
+    }
+}
+
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
@@ -112,7 +147,13 @@ app.post('/login', (req, res) => {
 app.get('/games', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataFindGame(USERNAME, PASSWORD, req.query.user).then(function(result){res.send({result})});
+    dataFindGame(USERNAME, PASSWORD, req.query.user).then(function(result){res.send({games: result})});
+});
+
+app.get('/requests', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataRequestGame(USERNAME, PASSWORD, req.query.user, req.query.email).then(function(result){res.send({success: result.success, message: result.message})})
 });
 
 app.listen(PORT, function (err) {
