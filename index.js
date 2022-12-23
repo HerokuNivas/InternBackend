@@ -90,8 +90,7 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
             current: REQUEST.user1,
             board: [["","",""],["","",""],["","",""]],
             winby: "",
-            time: REQUEST.time,
-            last: "o",
+            time: REQUEST.time
         }
         await collectionIs.insertOne(doc);
     }
@@ -110,7 +109,7 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
     try{
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
-        const res = await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
+        const res = await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, last: REQUEST.last}});
     }
     catch(err) {
         return "Done";
