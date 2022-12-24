@@ -110,7 +110,8 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
         const res = await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
-        if(REQUEST.winby !== ""){
+        console.log(REQUEST.winby);
+        if(REQUEST.winby !== "" || REQUEST.current === ""){
             dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user);
         }
     }
