@@ -1,13 +1,13 @@
-import { json, urlencoded } from "body-parser";
-import { MongoClient } from "mongodb";
-import cors from "cors";
-import express, { json as _json } from 'express';
+const bodyParser = require("body-parser");
+const { MongoClient } = require("mongodb");
+const cors = require("cors");
+const express = require('express');
 const app = express();
 require('dotenv').config();
 
-app.use(_json());
-app.use(json());
-app.use(urlencoded({ extended: true }));
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions ={
     origin: 'https://intern-frontend-rho.vercel.app', 
@@ -216,16 +216,10 @@ async function dataFindParGame(USERNAME, PASSWORD, USER1, USER2, ID){
     try{
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
-        if(ID !== null){
-            var ObjectID = require("mongodb").ObjectId;
-            const o_id = new ObjectID(ID);
-            const result = await collectionIs.findOne({USER1, USER2, o_id});
-            return result;
-        }
-        else{
-            const result = await collectionIs.findOne({USER1, USER2});
-            return result;
-        }
+        const ObjectID = require("mongodb").ObjectId;
+        const o_id = ObjectID(ID);
+        const result = await collectionIs.findOne({_id: o_id})
+        return result;
     }
     catch(err){
         return err;
@@ -291,14 +285,16 @@ app.post('/update', (req, res) => {
     dataUpdateGame(USERNAME, PASSWORD, req.body).then(function(result){res.send({result: result})});
 });
 
+app.get('/pargame', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataFindParGame(USERNAME, PASSWORD, req.query.user1, req.query.user2, req.query.id).then(function(result){res.send({games: result})});
+})
+
+
 app.listen(PORT, function (err) {
     if (err) console.log("Error is" + err);
 }); 
 
-app.get('/pargame', (req, res) => {
-    const USERNAME = process.env.NAME;
-    const PASSWORD = process.env.PASS;
-    dataFindParGame(USERNAME, PASSWORD, req.user1, req.user2, req.id).then(function(result){res.send({games: result})});
-})
 
-export default app;
+module.exports = app;
