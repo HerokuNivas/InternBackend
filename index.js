@@ -169,6 +169,9 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
         const sendTo = await collectionIs.findOne({Email: EMAIL});
         if(sendTo == null)
             return {success: false, message: "No user found"}
+        else if(sendTo.UserName === USER){
+            return {success: false, message: "You cannot send request to you"}
+        }
         else{
             const collectionIsOne = databaseIs.collection("requests");
             const findAgain = await collectionIsOne.findOne({user1: USER, user2: sendTo.UserName})
