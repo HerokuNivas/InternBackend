@@ -17,22 +17,6 @@ const corsOptions ={
 app.use(cors(corsOptions));
 const PORT = process.env.PORT || 5000;
 
-// async function totalSize(USERNAME, PASSWORD){
-//     const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.5bgl0yw.mongodb.net/?retryWrites=true&w=majority";
-//     const client = new MongoClient(uri);
-//     try {
-//         const databaseIs = client.db("AsyncTicTacToe");
-//         const collectionIs = databaseIs.collection("user");
-//         return await collectionIs.count();
-//     }
-//     catch(err) {
-//         console.log(err);
-//     }
-//     finally {
-//         await client.close();
-//     }
-// }
-
 async function dataFindGame(USERNAME, PASSWORD, REQUEST){
     const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
@@ -110,6 +94,9 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
         await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
+        if(REQUEST.winby !== ""){
+            dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
+        }
     }
     catch(err) {
         return "Done";
