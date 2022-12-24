@@ -75,7 +75,8 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
             current: REQUEST.user1,
             board: [["","",""],["","",""],["","",""]],
             winby: "",
-            time: REQUEST.time
+            time: REQUEST.time,
+            winpo: ""
         }
         await collectionIs.insertOne(doc);
     }
@@ -96,7 +97,7 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(REQUEST.id);
-        await collectionIs.updateOne({_id: o_id}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
+        await collectionIs.updateOne({_id: o_id}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo}});
         if(REQUEST.winby !== ""){
             dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
         }
