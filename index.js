@@ -93,7 +93,9 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
     try{
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
-        await collectionIs.updateOne({user1: REQUEST.user1, user2: REQUEST.user2}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
+        const ObjectID = require("mongodb").ObjectId;
+        const o_id = ObjectID(REQUEST.id);
+        await collectionIs.updateOne({_id: o_id}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time}});
         if(REQUEST.winby !== ""){
             dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
         }
@@ -210,7 +212,7 @@ async function dataRejectGame(USERNAME, PASSWORD, USER1, USER2){
     }
 }
 
-async function dataFindParGame(USERNAME, PASSWORD, USER1, USER2, ID){
+async function dataFindParGame(USERNAME, PASSWORD, ID){
     const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
     try{
@@ -288,7 +290,7 @@ app.post('/update', (req, res) => {
 app.get('/pargame', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataFindParGame(USERNAME, PASSWORD, req.query.user1, req.query.user2, req.query.id).then(function(result){res.send({games: result})});
+    dataFindParGame(USERNAME, PASSWORD,req.query.id).then(function(result){res.send({games: result})});
 })
 
 
