@@ -44,7 +44,7 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST){
         const collectionIs = databaseIs.collection("user");
         var findUser = await collectionIs.findOne({UserName: REQUEST.UserName});
         if(findUser != null){
-            return ({success: false, message: "Already signed up."})
+            return ({success: false, message: "Username already taken."})
         }
         const doc = {
             UserName : REQUEST.UserName,
