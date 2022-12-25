@@ -10,8 +10,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions ={
-    // origin: 'https://intern-frontend-rho.vercel.app', 
-    origin: 'http://localhost:3000',
+    origin: 'https://intern-frontend-rho.vercel.app', 
+    // origin: 'http://localhost:3000',
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
 }
