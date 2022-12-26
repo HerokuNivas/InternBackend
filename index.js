@@ -9,78 +9,78 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const corsOptions ={
+const corsOptions = {
     // origin: 'https://asynchronous-tic-tac-toe.vercel.app', 
     origin: 'http://localhost:3000',
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
+    credentials: true,            //access-control-allow-credentials:true
+    optionSuccessStatus: 200
 }
 app.use(cors(corsOptions));
 const PORT = process.env.PORT || 5000;
 
-async function dataFindGame(USERNAME, PASSWORD, REQUEST){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataFindGame(USERNAME, PASSWORD, REQUEST) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
-        var result = await collectionIs.find({$or:[{user1:REQUEST}, {user2: REQUEST}]}).toArray();
+        var result = await collectionIs.find({ $or: [{ user1: REQUEST }, { user2: REQUEST }] }).toArray();
         return result;
     }
-    catch(err){
+    catch (err) {
         return err;
     }
-    finally{
+    finally {
         await client.close();
     }
-    return {};  
+    return {};
 }
 
-async function datainsertuser(USERNAME, PASSWORD, REQUEST){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
     try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("user");
-        var findUser = await collectionIs.findOne({UserName: REQUEST.UserName});
-        if(findUser != null){
-            return ({success: false, message: "Username already taken."})
+        var findUser = await collectionIs.findOne({ UserName: REQUEST.UserName });
+        if (findUser != null) {
+            return ({ success: false, message: "Username already taken." })
         }
         const doc = {
-            UserName : REQUEST.UserName,
+            UserName: REQUEST.UserName,
             Email: REQUEST.Email,
             Name: REQUEST.Name,
             Password: REQUEST.Password
         }
         await collectionIs.insertOne(doc);
     }
-    catch(err) {
-        return {success: false, message: "Error Occured."}
+    catch (err) {
+        return { success: false, message: "Error Occured." }
     }
     finally {
         await client.close();
     }
-    return {success: true, message: ""}
+    return { success: true, message: "" }
 }
 
-async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataCreateGame(USERNAME, PASSWORD, REQUEST) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
         const doc = {
             user1: REQUEST.user1,
             user2: REQUEST.user2,
             current: REQUEST.user1,
-            board: [["","",""],["","",""],["","",""]],
+            board: [["", "", ""], ["", "", ""], ["", "", ""]],
             winby: "",
             time: REQUEST.time,
             winpo: ""
         }
         await collectionIs.insertOne(doc);
     }
-    catch(err) {
+    catch (err) {
         return "Done";
     }
     finally {
@@ -89,20 +89,20 @@ async function dataCreateGame(USERNAME, PASSWORD, REQUEST){
     return "Done";
 }
 
-async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(REQUEST.id);
-        await collectionIs.updateOne({_id: o_id}, {$set:{user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo}});
-        if(REQUEST.winby !== ""){
+        await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
+        if (REQUEST.winby !== "") {
             dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
         }
     }
-    catch(err) {
+    catch (err) {
         return "Done";
     }
     finally {
@@ -112,17 +112,17 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST){
 }
 
 
-async function dataFind(USERNAME, PASSWORD, REQUEST){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataFind(USERNAME, PASSWORD, REQUEST) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
     try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("user");
-        const sendTo = await collectionIs.findOne({UserName: REQUEST.user, Password: REQUEST.password});
-        if(sendTo !== null)
+        const sendTo = await collectionIs.findOne({ UserName: REQUEST.user, Password: REQUEST.password });
+        if (sendTo !== null)
             return true;
     }
-    catch(err) {
+    catch (err) {
         return false;
     }
     finally {
@@ -131,42 +131,42 @@ async function dataFind(USERNAME, PASSWORD, REQUEST){
     return false;
 }
 
-async function dataMyRequests(USERNAME, PASSWORD, USER){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataMyRequests(USERNAME, PASSWORD, USER) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("requests");
-        var result = await collectionIs.find({$and:[{to:USER}, {message: "Request in progress"}]}).toArray();
+        var result = await collectionIs.find({ $and: [{ to: USER }, { message: "Request in progress" }] }).toArray();
         return result;
     }
-    catch(err){
+    catch (err) {
         return {};
     }
-    finally{
+    finally {
         client.close();
     }
 }
 
-async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("user");
-        const sendTo = await collectionIs.findOne({Email: EMAIL});
-        if(sendTo == null)
-            return {success: false, message: "No user found"}
-        else if(sendTo.UserName === USER){
-            return {success: false, message: "You cannot send request to you"}
+        const sendTo = await collectionIs.findOne({ Email: EMAIL });
+        if (sendTo == null)
+            return { success: false, message: "No user found" }
+        else if (sendTo.UserName === USER) {
+            return { success: false, message: "You cannot send request to you" }
         }
-        else{
+        else {
             const collectionIsOne = databaseIs.collection("requests");
-            const findAgain = await collectionIsOne.findOne({user1: USER, user2: sendTo.UserName})
-            if(findAgain !== null){
-                return {success: false, message: findAgain.message}
+            const findAgain = await collectionIsOne.findOne({ user1: USER, user2: sendTo.UserName })
+            if (findAgain !== null) {
+                return { success: false, message: findAgain.message }
             }
-            else{
+            else {
                 const doc = {
                     user1: USER,
                     user2: sendTo.UserName,
@@ -174,131 +174,156 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL){
                     message: "Request in progress"
                 }
                 await collectionIsOne.insertOne(doc);
-                return {success: true, message: "successfully sent"}
+                return { success: true, message: "successfully sent" }
             }
         }
     }
-    catch(err){
-        return {success: false, message: "An error occured"}
+    catch (err) {
+        return { success: false, message: "An error occured" }
     }
-    finally{
+    finally {
         client.close();
     }
 }
 
-async function dataAcceptGame(USERNAME, PASSWORD, USER1, USER2){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataAcceptGame(USERNAME, PASSWORD, USER1, USER2) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("requests");
-        const data = await collectionIs.updateOne({$and:[{user1: USER1}, {user2: USER2}]}, {$set:{message: "Game in progress"}});
+        const data = await collectionIs.updateOne({ $and: [{ user1: USER1 }, { user2: USER2 }] }, { $set: { message: "Game in progress" } });
         return true;
     }
-    catch(err){
+    catch (err) {
         return false;
     }
 }
 
-async function dataRejectGame(USERNAME, PASSWORD, USER1, USER2){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataRejectGame(USERNAME, PASSWORD, USER1, USER2) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("requests");
-        const data = await collectionIs.deleteOne({user1: USER1, user2: USER2});
+        const data = await collectionIs.deleteOne({ user1: USER1, user2: USER2 });
         return true;
     }
-    catch(err){
+    catch (err) {
         return false;
     }
 }
 
-async function dataFindParGame(USERNAME, PASSWORD, ID){
-    const uri = "mongodb+srv://"+USERNAME+":"+PASSWORD+"@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+async function dataFindParGame(USERNAME, PASSWORD, ID) {
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
-    try{
+    try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(ID);
-        const result = await collectionIs.findOne({_id: o_id})
+        const result = await collectionIs.findOne({ _id: o_id })
         return result;
     }
-    catch(err){
+    catch (err) {
         return err;
     }
-    finally{
+    finally {
         await client.close();
     }
-    return {};  
+    return {};
+}
+
+async function dataSendEmail() {
+    var email = require('emailjs');
+
+    var server = email.server.connect({
+        user: 'asynctictactoe@gmail.com',
+        password: '123TicTacToe',
+        host: 'smtp.gmail.com',
+        ssl: true
+    });
+
+    server.send({
+        text: 'Hey howdy',
+        from: 'NodeJS',
+        to: 'VSNSAINIVAS <vsnsainivasand2003@gmail.com>',
+        cc: '',
+        subject: 'Greetings'
+    }, function (err, message) {
+        console.log(err || message);
+    });
 }
 
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    datainsertuser(USERNAME, PASSWORD, req.body).then(function(result){res.send({success: result.success, message: result.message})});
+    datainsertuser(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ success: result.success, message: result.message }) });
 });
 
 app.post('/login', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataFind(USERNAME, PASSWORD, req.body).then(function(result){res.send({success: result})});
+    dataFind(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ success: result }) });
 });
 
 app.post('/creategame', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataCreateGame(USERNAME, PASSWORD, req.body).then(function(result){res.send({success: result})});
+    dataCreateGame(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ success: result }) });
 });
 
 app.get('/games', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataFindGame(USERNAME, PASSWORD, req.query.user).then(function(result){res.send({games: result})});
+    dataFindGame(USERNAME, PASSWORD, req.query.user).then(function (result) { res.send({ games: result }) });
 });
 
 app.get('/requests', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataRequestGame(USERNAME, PASSWORD, req.query.user, req.query.email).then(function(result){res.send({success: result.success, message: result.message})})
+    dataRequestGame(USERNAME, PASSWORD, req.query.user, req.query.email).then(function (result) { res.send({ success: result.success, message: result.message }) })
 });
 
 app.get('/myrequests', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataMyRequests(USERNAME, PASSWORD, req.query.user).then(function(result){res.send(({result: result}))});
+    dataMyRequests(USERNAME, PASSWORD, req.query.user).then(function (result) { res.send(({ result: result })) });
 });
 
 app.get('/accept', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataAcceptGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function(result){res.send({success: result})});
+    dataAcceptGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function (result) { res.send({ success: result }) });
 });
 
 app.get('/reject', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataRejectGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function(result){res.send({success: result})});
+    dataRejectGame(USERNAME, PASSWORD, req.query.user1, req.query.user2).then(function (result) { res.send({ success: result }) });
 });
 
 app.post('/update', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataUpdateGame(USERNAME, PASSWORD, req.body).then(function(result){res.send({result: result})});
+    dataUpdateGame(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ result: result }) });
 });
 
 app.get('/pargame', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
-    dataFindParGame(USERNAME, PASSWORD,req.query.id).then(function(result){res.send({games: result})});
-})
+    dataFindParGame(USERNAME, PASSWORD, req.query.id).then(function (result) { res.send({ games: result }) });
+});
+
+app.get('/email', (req, res) => {
+    dataSendEmail().then(function (result) { res.send({ result: result }) })
+});
 
 
 app.listen(PORT, function (err) {
     if (err) console.log("Error is" + err);
-}); 
+});
 
 
 module.exports = app;
