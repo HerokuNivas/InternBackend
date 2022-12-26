@@ -234,27 +234,6 @@ async function dataFindParGame(USERNAME, PASSWORD, ID) {
     return {};
 }
 
-async function dataSendEmail() {
-    var email = require('emailjs');
-
-    var server = email.server.connect({
-        user: 'asynctictactoe@gmail.com',
-        password: '123TicTacToe',
-        host: 'smtp.gmail.com',
-        ssl: true
-    });
-
-    server.send({
-        text: 'Hey howdy',
-        from: 'NodeJS',
-        to: 'VSNSAINIVAS <vsnsainivasand2003@gmail.com>',
-        cc: '',
-        subject: 'Greetings'
-    }, function (err, message) {
-        console.log(err || message);
-    });
-}
-
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -314,10 +293,6 @@ app.get('/pargame', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
     dataFindParGame(USERNAME, PASSWORD, req.query.id).then(function (result) { res.send({ games: result }) });
-});
-
-app.get('/email', (req, res) => {
-    dataSendEmail().then(function (result) { res.send({ result: result }) })
 });
 
 
