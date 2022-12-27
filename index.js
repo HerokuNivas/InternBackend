@@ -46,18 +46,14 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
         if (findUser != null) {
             return ({ success: false, message: "Username already taken." })
         }
-        const bcrypt = require ('bcrypt');
-        const saltRounds = 10;
-        bcrypt.hash(REQUEST.Password, saltRounds, async function(err, hash) {
-            const doc = {
+        const doc = {
                 UserName: REQUEST.UserName,
                 Email: REQUEST.Email,
                 Name: REQUEST.Name,
-                Password: hash
+                Password: REQUEST.Password
             }
             await collectionIs.insertOne(doc);
-        });
-    }
+        }
     catch (err) {
         return { success: false, message: "Error Occured." }
     }
