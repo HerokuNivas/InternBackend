@@ -10,8 +10,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions = {
-    // origin: 'https://asynchronous-tic-tac-toe.vercel.app', 
-    origin: 'http://localhost:3000',
+    origin: 'https://asynchronous-tic-tac-toe.vercel.app', 
+    // origin: 'http://localhost:3000',
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
 }
@@ -48,7 +48,7 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
         }
         const bcrypt = require ('bcrypt');
         const saltRounds = 10;
-        bcrypt.hash(PASSWORD, saltRounds, async function(err, hash) {
+        bcrypt.hash(REQUEST.Password, saltRounds, async function(err, hash) {
             const doc = {
                 UserName: REQUEST.UserName,
                 Email: REQUEST.Email,
@@ -60,9 +60,6 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
     }
     catch (err) {
         return { success: false, message: "Error Occured." }
-    }
-    finally {
-        await client.close();
     }
     return { success: true, message: "" }
 }
