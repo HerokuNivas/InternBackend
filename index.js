@@ -118,17 +118,15 @@ async function dataFind(USERNAME, PASSWORD, REQUEST) {
     try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("user");
-        const sendTo = await collectionIs.findOne({ UserName: REQUEST.user, Password: REQUEST.password });
-        if (sendTo !== null)
-            return true;
+        const sendTo = await collectionIs.findOne({ UserName: REQUEST.user});
+        return {success: true, password: sendTo.Password};
     }
     catch (err) {
-        return false;
+        return {success: false, password: ""};
     }
     finally {
         await client.close();
     }
-    return false;
 }
 
 async function dataMyRequests(USERNAME, PASSWORD, USER) {
