@@ -10,8 +10,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions = {
-    origin: 'https://asynchronous-tic-tac-toe.vercel.app', 
-    // origin: 'http://localhost:3000',
+    // origin: 'https://asynchronous-tic-tac-toe.vercel.app', 
+    origin: 'http://localhost:3000',
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
 }
@@ -119,10 +119,10 @@ async function dataFind(USERNAME, PASSWORD, REQUEST) {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("user");
         const sendTo = await collectionIs.findOne({ UserName: REQUEST.user});
-        return {success: true, password: sendTo.Password};
+        return {success: true, password: sendTo.Password, email: sendTo.Email};
     }
     catch (err) {
-        return {success: false, password: ""};
+        return {success: false, password: "", email: ""};
     }
     finally {
         await client.close();
