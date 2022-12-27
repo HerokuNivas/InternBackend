@@ -232,6 +232,23 @@ async function dataFindParGame(USERNAME, PASSWORD, ID) {
     return {};
 }
 
+async function dataPasswordChange(USERNAME, PASSWORD,REQUEST){
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try {
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("user");
+        await collectionIs.updateOne({ UserName : REQUEST.user }, { $set: { Password : REQUEST.password } });
+    }
+    catch (err) {
+        return "Done";
+    }
+    finally {
+        await client.close();
+    }
+    return "Done";
+}
+
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -291,6 +308,12 @@ app.get('/pargame', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
     dataFindParGame(USERNAME, PASSWORD, req.query.id).then(function (result) { res.send({ games: result }) });
+});
+
+app.post('/passwordChange', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataPasswordChange(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ result: result }) });
 });
 
 
