@@ -57,6 +57,9 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
     catch (err) {
         return { success: false, message: "Error Occured." }
     }
+    finally{
+        client.close();
+    }
     return { success: true, message: "" }
 }
 
