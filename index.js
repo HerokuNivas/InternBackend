@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions = {
-    origin: 'https://internfrontend.valivetiswamy.repl.co/', 
+    origin: 'https://internfrontend.valivetiswamy.repl.co', 
     // origin: 'http://localhost:3000',
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
