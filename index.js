@@ -250,6 +250,24 @@ async function dataPasswordChange(USERNAME, PASSWORD,REQUEST){
     return "Done";
 }
 
+async function dataTotalRequests(USERNAME, PASSWORD, REQUEST){
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try {
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("requests");
+        const returnVal = await collectionIs.count({ to : REQUEST.user });
+        return returnVal;
+    }
+    catch (err) {
+        return 0;
+    }
+    finally {
+        await client.close();
+    }
+    return 0;
+}
+
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -317,6 +335,11 @@ app.post('/passwordChange', (req, res) => {
     dataPasswordChange(USERNAME, PASSWORD, req.body).then(function (result) { res.send({ result: result }) });
 });
 
+app.post('/totalRequests', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataTotalRequests(USERNAME, PASSWORD, req.body).then(function(result) { res.send({number: result})});
+});
 
 app.listen(PORT, function (err) {
     if (err) console.log("Error is" + err);
