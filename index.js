@@ -256,7 +256,7 @@ async function dataTotalRequests(USERNAME, PASSWORD, REQUEST){
     try {
         const databaseIs = client.db("AsyncTicTacToe");
         const collectionIs = databaseIs.collection("requests");
-        const returnVal = await collectionIs.count({ to : REQUEST.user });
+        const returnVal = await collectionIs.count({ to : REQUEST.user, message: "Request in progress" });
         return returnVal;
     }
     catch (err) {
