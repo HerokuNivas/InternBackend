@@ -50,7 +50,10 @@ async function datainsertuser(USERNAME, PASSWORD, REQUEST) {
                 UserName: REQUEST.UserName,
                 Email: REQUEST.Email,
                 Name: REQUEST.Name,
-                Password: REQUEST.Password
+                Password: REQUEST.Password,
+                Won: 0,
+                Lost: 0,
+                Draw: 0
             }
             await collectionIs.insertOne(doc);
         }
@@ -268,6 +271,24 @@ async function dataTotalRequests(USERNAME, PASSWORD, REQUEST){
     return 0;
 }
 
+async function getProfile(USERNAME, PASSWORD, USER){
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try {
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("user");
+        const user = await collectionIs.findOne({ UserName: USER });
+        return user;
+    }
+    catch (err) {
+        return {};
+    }
+    finally {
+        await client.close();
+    }
+    return {};
+}
+
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -328,6 +349,13 @@ app.get('/pargame', (req, res) => {
     const PASSWORD = process.env.PASS;
     dataFindParGame(USERNAME, PASSWORD, req.query.id).then(function (result) { res.send({ games: result }) });
 });
+
+app.get('/profile', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    getProfile(USERNAME, PASSWORD, req.query.user).then(function (result){res.send({user: result})});
+});
+
 
 app.post('/passwordChange', (req, res) => {
     const USERNAME = process.env.NAME;
