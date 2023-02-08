@@ -289,6 +289,35 @@ async function getProfile(USERNAME, PASSWORD, USER){
     return {};
 }
 
+async function dataWonLost(USERNAME, PASSWORD, REQ){
+    const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
+    const client = new MongoClient(uri);
+    try {
+        const databaseIs = client.db("AsyncTicTacToe");
+        const collectionIs = databaseIs.collection("user");
+        if(REQ.status === "Draw"){
+            await collectionIs.updateOne({ UserName: REQ.user1 }, {$inc: {Draw: 1}});
+            await collectionIs.updateOne({ UserName: REQ.user2 }, {$inc: {Draw: 1}});
+        }
+        else if(REQ.status === "Won"){
+            await collectionIs.updateOne({ UserName: REQ.user1}, {$inc: {Won: 1}});
+            await collectionIs.updateOne({ UserName: REQ.user2}, {$inc: {Lost: 1}});
+        }
+        else{
+            await collectionIs.updateOne({ UserName: REQ.user1}, {$inc: {Lost: 1}});
+            await collectionIs.updateOne({ UserName: REQ.user2}, {$inc: {Won: 1}});
+        }
+        return {Success: "Done"};
+    }
+    catch (err) {
+        return {Success: "Fail"};
+    }
+    finally {
+        await client.close();
+    }
+    return {};
+}
+
 
 app.post('/insertUser', (req, res) => {
     const USERNAME = process.env.NAME;
@@ -367,6 +396,12 @@ app.post('/totalRequests', (req, res) => {
     const USERNAME = process.env.NAME;
     const PASSWORD = process.env.PASS;
     dataTotalRequests(USERNAME, PASSWORD, req.body).then(function(result) { res.send({number: result})});
+});
+
+app.post('/countWonLost', (req, res) => {
+    const USERNAME = process.env.NAME;
+    const PASSWORD = process.env.PASS;
+    dataWonLost(USERNAME, PASSWORD, req.body).then(function(result) { res.send({sucess: result})})
 });
 
 app.listen(PORT, function (err) {
