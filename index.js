@@ -214,7 +214,7 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
                 const collectionIs2 = databaseIs.collection("games");
                 await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: "@Async", current: "", board: REQUEST.board, winby: "draw", time: new Date().toLocaleDateString(), winpo: "" } });
                 const collectionIs = databaseIs.collection("requests");
-                const data = await collectionIs.deleteOne({ user1: REQUEST.USER1, user2: "@Async" });
+                const data = await collectionIs.deleteOne({ user1: REQUEST.user1, user2: "@Async" });
                 const collectionIs1 = databaseIs.collection("user");
                 await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Draw: 1}});
                 await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Draw: 1}});
@@ -236,6 +236,7 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
                 await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: "", board: boardCurrent, winby: "@Async", time: new Date().toLocaleDateString(), winpo: "" } });
                 const collectionIs = databaseIs.collection("requests");
                 const data = await collectionIs.deleteOne({ user1: REQUEST.user1, user2: "@Async" });
+                console.log(data);
                 const collectionIs1 = databaseIs.collection("user");
                 await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Lost: 1}});
                 await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Won: 1}});
