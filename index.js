@@ -209,7 +209,17 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(REQUEST.id);
-        if(REQUEST.user2 !== "@Async" && REQUEST.winby === REQUEST.user1){
+        if(REQUEST.winby === "draw"){
+                const databaseIs = client.db("AsyncTicTacToe");
+                const collectionIs2 = databaseIs.collection("games");
+                await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: "@Async", current: "", board: REQUEST.board, winby: "draw", time: new Date().toLocaleDateString(), winpo: "" } });
+                const collectionIs = databaseIs.collection("requests");
+                const data = await collectionIs.deleteOne({ user1: REQUEST.USER1, user2: "@Async" });
+                const collectionIs1 = databaseIs.collection("user");
+                await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Draw: 1}});
+                await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Draw: 1}});
+        }
+        else if(REQUEST.user2 !== "@Async" && REQUEST.winby === REQUEST.user1){
             await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
             if (REQUEST.winby !== "") {
                 dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
@@ -219,14 +229,19 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
             const result = minimax(REQUEST.board, 'O');
             var boardCurrent = REQUEST.board;
             boardCurrent[result.index[0]][result.index[1]] = "O";
-            if(result.score === 10){
-                await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: "", board: boardCurrent, winby: "@Async", time: REQUEST.time, winpo: "" } });
+            var Won = checkWinner(boardCurrent);
+            if(Won === "O"){
                 const databaseIs = client.db("AsyncTicTacToe");
+                const collectionIs2 = databaseIs.collection("games");
+                await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: "", board: boardCurrent, winby: "@Async", time: new Date().toLocaleDateString(), winpo: "" } });
                 const collectionIs = databaseIs.collection("requests");
-                const data = await collectionIs.deleteOne({ user1: USER1, user2: USER2 });
+                const data = await collectionIs.deleteOne({ user1: REQUEST.USER1, user2: "@Async" });
+                const collectionIs1 = databaseIs.collection("user");
+                await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Lost: 1}});
+                await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Won: 1}});
             }
             else{
-                await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.user1, board: boardCurrent, winby: "@Async", time: REQUEST.time, winpo: REQUEST.winpo } });
+                await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.user1, board: boardCurrent, winby: "", time: REQUEST.time, winpo: REQUEST.winpo } });
             }
         }
     }
@@ -292,26 +307,28 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL) {
             if (findAgain !== null) {
                 return { success: false, message: findAgain.message }
             }
-            else if(sendTo.UserName === "@Async"){
+            else if(EMAIL === "async.ai.com"){
                 const doc = {
                     user1: USER,
-                    user2: sendTo.UserName,
-                    to: sendTo.UserName,
+                    user2: "@Async",
+                    to: "@Async",
                     message: "Game in progress"
                 }
                 await collectionIsOne.insertOne(doc);
-                const databaseIs = client.db("AsyncTicTacToe");
-            const collectionIs = databaseIs.collection("games");
-            const doc1 = {
-                user1: REQUEST.user1,
-                user2: REQUEST.user2,
-                current: REQUEST.user1,
-                board: [["", "", ""], ["", "", ""], ["", "", ""]],
-                winby: "",
-                time: REQUEST.time,
-                winpo: ""
-            }
-            await collectionIs.insertOne(doc1);
+                const databaseIs1 = client.db("AsyncTicTacToe");
+                const collectionIs1 = databaseIs1.collection("games");
+                const doc1 = {
+                    user1: USER,
+                    user2: "@Async",
+                    current: USER,
+                    board: [["", "", ""], ["", "", ""], ["", "", ""]],
+                    winby: "",
+                    time: new Date().toLocaleString(),
+                    winpo: ""
+                }
+                
+                const inserted = await collectionIs1.insertOne(doc1);
+                return { success: true, message: "successfully sent" }
             }
             else {
                 const doc = {
@@ -326,6 +343,7 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL) {
         }
     }
     catch (err) {
+        console.log(err);
         return { success: false, message: "An error occured" }
     }
     finally {
