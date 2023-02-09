@@ -18,6 +18,114 @@ const corsOptions = {
 app.use(cors(corsOptions));
 const PORT = process.env.PORT || 5000;
 
+const X = "X";
+const O = "O";
+const DRAW = "Draw";
+
+function checkWinner(board) {
+    // Check rows
+    for (let i = 0; i < 3; i++) {
+        if (board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+            return board[i][0];
+        }
+    }
+
+    // Check columns
+    for (let i = 0; i < 3; i++) {
+        if (board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
+            return board[0][i];
+        }
+    }
+
+    // Check diagonals
+    if (board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+        return board[0][0];
+    }
+
+    if (board[2][0] === board[1][1] && board[1][1] === board[0][2]) {
+        return board[2][0];
+    }
+
+    // Check if there is a draw
+    let moves = 0;
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (board[i][j] !== "") {
+                moves++;
+            }
+        }
+    }
+
+    if (moves === 9) {
+        return DRAW;
+    }
+
+    return null;
+}
+
+function getAvailableMoves(board) {
+    let availableMoves = [];
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (board[i][j] === "") {
+                availableMoves.push([i, j]);
+            }
+        }
+    }
+    return availableMoves;
+}
+
+function minimax(board, player) {
+    let winner = checkWinner(board);
+    if (winner === X) {
+        return { score: -10 };
+    } else if (winner === O) {
+        return { score: 10 };
+    } else if (winner === DRAW) {
+        return { score: 0 };
+    }
+
+    let moves = [];
+    let availableMoves = getAvailableMoves(board);
+    for (let i = 0; i < availableMoves.length; i++) {
+        let move = {};
+        move.index = availableMoves[i];
+        board[availableMoves[i][0]][availableMoves[i][1]] = player;
+
+        if (player === O) {
+            let result = minimax(board, X);
+            move.score = result.score;
+        } else {
+            let result = minimax(board, O);
+            move.score = result.score;
+        }
+
+        board[availableMoves[i][0]][availableMoves[i][1]] = "";
+        moves.push(move);
+    }
+
+    let bestMove;
+    if (player === O) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            if (moves[i].score > bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            if (moves[i].score < bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+
+    return moves[bestMove];
+}
+
 async function dataFindGame(USERNAME, PASSWORD, REQUEST) {
     const uri = "mongodb+srv://" + USERNAME + ":" + PASSWORD + "@cluster0.ciz9ysq.mongodb.net/?retryWrites=true&w=majority";
     const client = new MongoClient(uri);
@@ -101,9 +209,25 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(REQUEST.id);
-        await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
-        if (REQUEST.winby !== "") {
-            dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
+        if(REQUEST.user2 !== "@Async" && REQUEST.winby === REQUEST.user1){
+            await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
+            if (REQUEST.winby !== "") {
+                dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
+            }
+        }
+        else{
+            const result = minimax(REQUEST.board, 'O');
+            var boardCurrent = REQUEST.board;
+            boardCurrent[result.index[0]][result.index[1]] = "O";
+            if(result.score === 10){
+                await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: "", board: boardCurrent, winby: "@Async", time: REQUEST.time, winpo: "" } });
+                const databaseIs = client.db("AsyncTicTacToe");
+                const collectionIs = databaseIs.collection("requests");
+                const data = await collectionIs.deleteOne({ user1: USER1, user2: USER2 });
+            }
+            else{
+                await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.user1, board: boardCurrent, winby: "@Async", time: REQUEST.time, winpo: REQUEST.winpo } });
+            }
         }
     }
     catch (err) {
@@ -167,6 +291,27 @@ async function dataRequestGame(USERNAME, PASSWORD, USER, EMAIL) {
             const findAgain = await collectionIsOne.findOne({ user1: USER, user2: sendTo.UserName })
             if (findAgain !== null) {
                 return { success: false, message: findAgain.message }
+            }
+            else if(sendTo.UserName === "@Async"){
+                const doc = {
+                    user1: USER,
+                    user2: sendTo.UserName,
+                    to: sendTo.UserName,
+                    message: "Game in progress"
+                }
+                await collectionIsOne.insertOne(doc);
+                const databaseIs = client.db("AsyncTicTacToe");
+            const collectionIs = databaseIs.collection("games");
+            const doc1 = {
+                user1: REQUEST.user1,
+                user2: REQUEST.user2,
+                current: REQUEST.user1,
+                board: [["", "", ""], ["", "", ""], ["", "", ""]],
+                winby: "",
+                time: REQUEST.time,
+                winpo: ""
+            }
+            await collectionIs.insertOne(doc1);
             }
             else {
                 const doc = {
@@ -403,6 +548,7 @@ app.post('/countWonLost', (req, res) => {
     const PASSWORD = process.env.PASS;
     dataWonLost(USERNAME, PASSWORD, req.body).then(function(result) { res.send({sucess: result})})
 });
+
 
 app.listen(PORT, function (err) {
     if (err) console.log("Error is" + err);
