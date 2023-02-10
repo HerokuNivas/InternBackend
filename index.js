@@ -209,7 +209,18 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
         const collectionIs = databaseIs.collection("games");
         const ObjectID = require("mongodb").ObjectId;
         const o_id = ObjectID(REQUEST.id);
-        if(REQUEST.winby === "draw"){
+        if(REQUEST.user1 !== "@Async" && REQUEST.user2!=="@Async"){
+            const databaseIs = client.db("AsyncTicTacToe");
+            const collectionIs = databaseIs.collection("games");
+            const ObjectID = require("mongodb").ObjectId;
+            const o_id = ObjectID(REQUEST.id);
+            const res = await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
+            if (REQUEST.winby !== "") {
+                dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
+            }
+        }
+
+        else if(REQUEST.winby === "draw" && REQUEST.user2 === "@Async"){
                 const databaseIs = client.db("AsyncTicTacToe");
                 const collectionIs2 = databaseIs.collection("games");
                 await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: "@Async", current: "", board: REQUEST.board, winby: "draw", time: new Date().toLocaleDateString(), winpo: "" } });
@@ -219,12 +230,7 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
                 await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Draw: 1}});
                 await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Draw: 1}});
         }
-        else if(REQUEST.user2 !== "@Async" && REQUEST.winby === REQUEST.user1){
-            await collectionIs.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: REQUEST.current, board: REQUEST.board, winby: REQUEST.winby, time: REQUEST.time, winpo: REQUEST.winpo } });
-            if (REQUEST.winby !== "") {
-                dataRejectGame(USERNAME, PASSWORD, REQUEST.user1, REQUEST.user2)
-            }
-        }
+        
         else{
             const result = minimax(REQUEST.board, 'O');
             var boardCurrent = REQUEST.board;
@@ -236,7 +242,6 @@ async function dataUpdateGame(USERNAME, PASSWORD, REQUEST) {
                 await collectionIs2.updateOne({ _id: o_id }, { $set: { user1: REQUEST.user1, user2: REQUEST.user2, current: "", board: boardCurrent, winby: "@Async", time: new Date().toLocaleDateString(), winpo: "" } });
                 const collectionIs = databaseIs.collection("requests");
                 const data = await collectionIs.deleteOne({ user1: REQUEST.user1, user2: "@Async" });
-                console.log(data);
                 const collectionIs1 = databaseIs.collection("user");
                 await collectionIs1.updateOne({ UserName: REQUEST.user1}, {$inc: {Lost: 1}});
                 await collectionIs1.updateOne({ UserName: "@Async"}, {$inc: {Won: 1}});
